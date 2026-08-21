@@ -1,0 +1,33 @@
+name: Balu feed frissítése
+
+on:
+  schedule:
+    # minden 3 órában lefut (UTC idő szerint)
+    - cron: "0 */3 * * *"
+  workflow_dispatch: # ezzel kézzel is elindítható a "Run workflow" gombbal
+
+permissions:
+  contents: write
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repó letöltése
+        uses: actions/checkout@v4
+
+      - name: Node.js beállítása
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sitemap lekérése és tömörítése
+        run: node trim-feed.js
+
+      - name: Változás mentése (commit + push)
+        run: |
+          git config user.name "balu-feed-bot"
+          git config user.email "actions@github.com"
+          git add products.json
+          git diff --quiet --cached || git commit -m "Termékfeed frissítve"
+          git push
